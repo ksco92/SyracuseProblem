@@ -1,0 +1,243 @@
+SQL> start create_siracusa
+SQL> CREATE table SIRACUSA (
+  2  	 n number(3) primary key,
+  3  	 solucion varchar2(1000),
+  4  	 grado number(5),
+  5  	 peso number(10,2)
+  6  );
+
+Table created.
+
+SQL> start insert_n
+SQL> declare
+  2  	 col_n number := 1;
+  3  
+  4  begin
+  5  	 while col_n <= 255 loop
+  6  	     insert into siracusa (n) values (col_n);
+  7  	     col_n := col_n + 1;
+  8  	 end loop;
+  9  
+ 10  end;
+ 11  /
+
+PL/SQL procedure successfully completed.
+
+SQL> start 1
+SQL> declare
+  2  	 cursor cur_sir is
+  3  	     select n from siracusa;
+  4  
+  5  	 sol varchar2(1000);
+  6  	 valor number;
+  7  
+  8  begin
+  9  	 for sir in cur_sir loop
+ 10  
+ 11  	     valor := sir.n;
+ 12  	     sol := to_char(sir.n);
+ 13  
+ 14  	     while valor != 1 loop
+ 15  
+ 16  		 if mod(valor, 2) = 0 then
+ 17  		     valor := valor / 2;
+ 18  		     sol := sol || ', ' || to_char(valor);
+ 19  		 else
+ 20  		     valor := (valor * 3) + 1;
+ 21  		     sol := sol || ', ' || to_char(valor);
+ 22  		 end if;
+ 23  
+ 24  	     end loop;
+ 25  
+ 26  	     update siracusa set solucion = sol where n = sir.n;
+ 27  
+ 28  	 end loop;
+ 29  
+ 30  end;
+ 31  /
+
+PL/SQL procedure successfully completed.
+
+SQL> start 2
+SQL> declare
+  2  	 cursor cur_sol is
+  3  	     select n,
+  4  	     solucion,
+  5  	     length(solucion) - length(replace(solucion,',')) as grado
+  6  	     from siracusa;
+  7  
+  8  	 cursor cur_peso (sol_var varchar2) is
+  9  	     select to_number(column_value) as id from xmltable(sol_var);
+ 10  
+ 11  	 grado number;
+ 12  	 p number(10,2);
+ 13  
+ 14  begin
+ 15  
+ 16  	 for sol in cur_sol loop
+ 17  	     update siracusa set grado = sol.grado where n = sol.n;
+ 18  	 end loop;
+ 19  
+ 20  	 for sol in cur_sol loop
+ 21  
+ 22  	     grado := sol.grado;
+ 23  	     p := 0;
+ 24  
+ 25  	     for val in cur_peso(sol.solucion) loop
+ 26  		 p := p + val.id * grado;
+ 27  		 grado := grado - 1;
+ 28  	     end loop;
+ 29  
+ 30  	     p := p / 5;
+ 31  
+ 32  	     update siracusa set peso = p where n = sol.n;
+ 33  
+ 34  	 end loop;
+ 35  
+ 36  end;
+ 37  /
+
+PL/SQL procedure successfully completed.
+
+SQL> start 3
+SQL> declare
+  2  	 num number := &num;
+  3  	 s varchar2(1000);
+  4  	 g number;
+  5  	 p number(10,2);
+  6  	 t varchar2(5);
+  7  
+  8  begin
+  9  	 select
+ 10  	     n,
+ 11  	     solucion,
+ 12  	     grado,
+ 13  	     peso,
+ 14  	     case mod(n, 2)
+ 15  		 when 0 then 'Par'
+ 16  		 else 'Impar'
+ 17  		 end
+ 18  	 into num, s, g, p, t
+ 19  	 from siracusa
+ 20  	 where n = num;
+ 21  
+ 22  	 dbms_output.put_line('N = ' || num || '    Grado = ' || g || '    Peso = ' || p || '	 Tipo = ' || t);
+ 23  	 dbms_output.put_line('Solucion = ' || s);
+ 24  
+ 25  end;
+ 26  /
+Enter value for num: 17
+old   2:     num number := &num;
+new   2:     num number := 17;
+N = 17    Grado = 12    Peso = 359.2    Tipo = Impar                                                                                                                                                                                                                                                                                                                                                            
+Solucion = 17, 52, 26, 13, 40, 20, 10, 5, 16, 8, 4, 2, 1                                                                                                                                                                                                                                                                                                                                                        
+
+PL/SQL procedure successfully completed.
+
+SQL> start 3
+SQL> declare
+  2  	 num number := &num;
+  3  	 s varchar2(1000);
+  4  	 g number;
+  5  	 p number(10,2);
+  6  	 t varchar2(5);
+  7  
+  8  begin
+  9  	 select
+ 10  	     n,
+ 11  	     solucion,
+ 12  	     grado,
+ 13  	     peso,
+ 14  	     case mod(n, 2)
+ 15  		 when 0 then 'Par'
+ 16  		 else 'Impar'
+ 17  		 end
+ 18  	 into num, s, g, p, t
+ 19  	 from siracusa
+ 20  	 where n = num;
+ 21  
+ 22  	 dbms_output.put_line('N = ' || num || '    Grado = ' || g || '    Peso = ' || p || '	 Tipo = ' || t);
+ 23  	 dbms_output.put_line('Solucion = ' || s);
+ 24  
+ 25  end;
+ 26  /
+Enter value for num: 27
+old   2:     num number := &num;
+new   2:     num number := 27;
+N = 27    Grado = 111    Peso = 949065.6    Tipo = Impar                                                                                                                                                                                                                                                                                                                                                        
+Solucion = 27, 82, 41, 124, 62, 31, 94, 47, 142, 71, 214, 107, 322, 161, 484, 242, 121, 364, 182, 91, 274, 137, 412, 206, 103, 310, 155, 466, 233, 700, 350, 175, 526, 263, 790, 395, 1186, 593, 1780, 890, 445, 1336, 668, 334, 167, 502, 251, 754, 377, 1132, 566, 283, 850, 425, 1276, 638, 319, 958, 479, 1438, 719, 2158, 1079, 3238, 1619, 4858, 2429, 7288, 3644, 1822, 911, 2734, 1367, 4102, 2051,     
+6154, 3077, 9232, 4616, 2308, 1154, 577, 1732, 866, 433, 1300, 650, 325, 976, 488, 244, 122, 61, 184, 92, 46, 23, 70, 35, 106, 53, 160, 80, 40, 20, 10, 5, 16, 8, 4, 2, 1                                                                                                                                                                                                                                       
+
+PL/SQL procedure successfully completed.
+
+SQL> start 3
+SQL> declare
+  2  	 num number := &num;
+  3  	 s varchar2(1000);
+  4  	 g number;
+  5  	 p number(10,2);
+  6  	 t varchar2(5);
+  7  
+  8  begin
+  9  	 select
+ 10  	     n,
+ 11  	     solucion,
+ 12  	     grado,
+ 13  	     peso,
+ 14  	     case mod(n, 2)
+ 15  		 when 0 then 'Par'
+ 16  		 else 'Impar'
+ 17  		 end
+ 18  	 into num, s, g, p, t
+ 19  	 from siracusa
+ 20  	 where n = num;
+ 21  
+ 22  	 dbms_output.put_line('N = ' || num || '    Grado = ' || g || '    Peso = ' || p || '	 Tipo = ' || t);
+ 23  	 dbms_output.put_line('Solucion = ' || s);
+ 24  
+ 25  end;
+ 26  /
+Enter value for num: 100
+old   2:     num number := &num;
+new   2:     num number := 100;
+N = 100    Grado = 25    Peso = 2734.2    Tipo = Par                                                                                                                                                                                                                                                                                                                                                            
+Solucion = 100, 50, 25, 76, 38, 19, 58, 29, 88, 44, 22, 11, 34, 17, 52, 26, 13, 40, 20, 10, 5, 16, 8, 4, 2, 1                                                                                                                                                                                                                                                                                                   
+
+PL/SQL procedure successfully completed.
+
+SQL> start 3
+SQL> declare
+  2  	 num number := &num;
+  3  	 s varchar2(1000);
+  4  	 g number;
+  5  	 p number(10,2);
+  6  	 t varchar2(5);
+  7  
+  8  begin
+  9  	 select
+ 10  	     n,
+ 11  	     solucion,
+ 12  	     grado,
+ 13  	     peso,
+ 14  	     case mod(n, 2)
+ 15  		 when 0 then 'Par'
+ 16  		 else 'Impar'
+ 17  		 end
+ 18  	 into num, s, g, p, t
+ 19  	 from siracusa
+ 20  	 where n = num;
+ 21  
+ 22  	 dbms_output.put_line('N = ' || num || '    Grado = ' || g || '    Peso = ' || p || '	 Tipo = ' || t);
+ 23  	 dbms_output.put_line('Solucion = ' || s);
+ 24  
+ 25  end;
+ 26  /
+Enter value for num: 101
+old   2:     num number := &num;
+new   2:     num number := 101;
+N = 101    Grado = 25    Peso = 4542.6    Tipo = Impar                                                                                                                                                                                                                                                                                                                                                          
+Solucion = 101, 304, 152, 76, 38, 19, 58, 29, 88, 44, 22, 11, 34, 17, 52, 26, 13, 40, 20, 10, 5, 16, 8, 4, 2, 1                                                                                                                                                                                                                                                                                                 
+
+PL/SQL procedure successfully completed.
+
+SQL> spool off
